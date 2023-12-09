@@ -1,0 +1,95 @@
+document.addEventListener("DOMContentLoaded", function () {
+  const fetchMovieGenres = async (genre_ids) => {
+    const genreMapping = {
+      28: "Action",
+      12: "Adventure",
+      // ... (other genre mappings)
+    };
+
+    return genre_ids.map((genre_id) => genreMapping[genre_id]).join(", ");
+  };
+
+  const Api_Access_Token =
+    "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjNmI0M2MyMmI2RGQwNjI4YjBiZGNiZjdmOTQ1OTY3NiIsInN1YiI6IjY1MTZlNmNmOTNiZDY5MDBlMTJkMjg3YSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.BBtszSXaifgH6jQELVl-zjrCCfkyDkpj0vWEfS-tXjU";
+
+  const options = {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${Api_Access_Token}`,
+      accept: "application/json",
+    },
+  };
+
+  fetch(
+    "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=&language=en-US&page=1&sort_by=popularity.desc",
+    options
+  )
+    .then((response) => response.json())
+    .then(async (response) => {
+      const randomIndex = Math.floor(Math.random() * response.results.length);
+      const movie = response.results[randomIndex];
+
+      // Check if elements exist in the DOM before trying to manipulate them
+      const movieGenreElement = document.querySelector(".movieGenre");
+      if (movieGenreElement) {
+        movieGenreElement.textContent = await fetchMovieGenres(movie.genre_ids);
+      }
+
+      const logoContainerTitle = document.querySelector(".logo_container h1");
+      if (logoContainerTitle) {
+        logoContainerTitle.textContent = movie.title;
+      }
+
+      const movieInfoSynopsis = document.querySelector(".movie_info_synopsis");
+      if (movieInfoSynopsis) {
+        movieInfoSynopsis.textContent = movie.overview;
+      }
+
+      const movieRatedElement = document.querySelector(".movie_rated");
+      if (movieRatedElement) {
+        movieRatedElement.textContent = movie.adult ? "G" : "PG";
+      }
+
+      const ratingsElement = document.querySelector(".ratings");
+      if (ratingsElement) {
+        ratingsElement.textContent = movie.vote_average;
+      }
+
+      const languageElement = document.querySelector(".language");
+      if (languageElement) {
+        languageElement.textContent = movie.original_language;
+      }
+
+      const posterElement = document.querySelector(".poster");
+      if (posterElement) {
+        const movieBackdrop = movie.backdrop_path;
+        const backdropUrl = "https://image.tmdb.org/t/p/original" + movieBackdrop;
+        posterElement.src = backdropUrl;
+      }
+
+      const imageContainer = document.getElementById("imageContainer");
+      if (imageContainer) {
+        const carousel = document.createElement("div");
+        carousel.classList = "carousel";
+
+        const shuffledResults = response.results.sort(() => 0.5 - Math.random());
+        shuffledResults.slice().forEach((movie) => {
+          const img = document.createElement("img");
+          img.src = "https://image.tmdb.org/t/p/w500" + movie.poster_path;
+          img.alt = "Movie Poster";
+          img.style.objectFit = "cover";
+          img.width = 330;
+          img.height = 190;
+          carousel.appendChild(img);
+
+          const ratings = document.createElement("span");
+          ratings.textContent = movie.vote_average;
+          carousel.appendChild(ratings);
+        });
+
+        imageContainer.innerHTML = "";
+        imageContainer.appendChild(carousel);
+      }
+    })
+    .catch((err) => console.error(err));
+});
